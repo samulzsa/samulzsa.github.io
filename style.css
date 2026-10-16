@@ -57,12 +57,12 @@ a { color: inherit; }
   display: grid; align-content: center; padding: 90px var(--gutter) 60px;
 }
 .hero h1 {
-  margin: 0; font: 400 clamp(44px, 15vw, 230px)/0.95 var(--mono); color: var(--yellow); overflow-wrap: anywhere;
+  margin: 0; font: 400 clamp(44px, 15vw, 230px)/1.2 var(--mono); color: var(--yellow); overflow-wrap: anywhere;
   letter-spacing: -.02em; position: relative; z-index: 2;
 }
 .hero h1 span { display: inline-block; opacity: 0; transform: translateY(40px); animation: rise .9s var(--ease) forwards; }
 .hero .tagline {
-  max-width: 34ch; margin: 28px 0 0; position: relative; z-index: 2;
+  max-width: 34ch; margin: 16px 0 0; position: relative; z-index: 2;
   font: 400 clamp(14px, 1.6vw, 18px)/1.6 var(--wide); font-stretch: 112.5%;
   opacity: 0; animation: fade 1s .9s forwards;
 }
@@ -82,30 +82,19 @@ a { color: inherit; }
 
 /* ---------- statement ---------- */
 .statement {
+  max-width: 1280px; margin: 0 auto; padding-right: max(var(--gutter), 8vw) !important;
   padding: 60px var(--gutter) 40px;
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 40px;
 }
 .statement h2 { margin: 0; font: 400 13px var(--wide); font-stretch: 112.5%; color: var(--ink-soft); }
-.statement .cols { columns: 2 300px; column-gap: 48px; }
+.statement .cols { columns: 2 300px; column-gap: 48px; max-width: 900px; }
 .statement p { margin: 0 0 1em; break-inside: avoid; }
 .statement p:first-child { font-size: 19px; line-height: 1.6; font-weight: 400; column-span: all; margin-bottom: 1.4em; }
 
 /* ---------- sections with phonetic headings ---------- */
-.section { padding: 80px var(--gutter) 40px; scroll-margin-top: 40px; }
-.section-head {
-  max-width: 1080px; margin-left: auto; margin-right: auto;
-  display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px;
-  border-bottom: 1px solid color-mix(in srgb, var(--ink) 18%, transparent); padding-bottom: 14px; margin-bottom: 36px;
-}
-.section-head h2 { margin: 0; font: 400 clamp(48px, 9vw, 130px)/1 var(--mono); color: var(--yellow); }
-.section-head p { margin: 0; font: 400 12px var(--wide); font-stretch: 112.5%; color: var(--ink-soft); }
-
-.grid { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(16px, 2.4vw, 32px); }
-@media (max-width: 860px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 700px) { .grid { grid-template-columns: 1fr; } .card .media { aspect-ratio: 4 / 4.4; } }
 
 /* ---------- project card + hover effect ---------- */
-.card { text-decoration: none; display: block; }
+.card { text-decoration: none; display: block; flex: none; width: var(--card-w); }
 .card .media {
   position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: var(--bg-deep);
   clip-path: inset(0 round 2px); transition: clip-path 1.2s var(--ease);
@@ -158,9 +147,8 @@ a { color: inherit; }
 .footer small { grid-column: 1 / -1; font: 300 11px var(--wide); }
 
 /* ---------- project page ---------- */
-.project-head { padding: 120px var(--gutter) 30px; }
-.project-head .back { font: 400 12px var(--wide); font-stretch: 112.5%; text-decoration: none; color: var(--ink-soft); }
-.project-head .back:hover { color: var(--ink); }
+.project-head { padding: 80px var(--gutter) 30px; max-width: 1200px; margin: 0 auto; }
+.project-head .kicker { margin: 0; font: 400 12px var(--wide); font-stretch: 112.5%; color: var(--ink-soft); }
 .project-head h1 {
   margin: 24px 0 8px; font: 400 clamp(36px, 6vw, 84px)/1.05 var(--wide); font-stretch: 112.5%; color: var(--yellow);
   letter-spacing: -.01em;
@@ -229,11 +217,9 @@ a { color: inherit; }
   .bar nav a { font-size: 18px; padding: 10px 0; }
   .hero { padding-top: 110px; align-content: start; }
   .hero .flower { width: 62vw; }
-  .section { padding-top: 56px; }
-  .section-head h2 { font-size: clamp(40px, 13vw, 64px); }
-  .statement { padding-top: 40px; gap: 16px; }
+  .statement { padding-top: 40px; gap: 16px; padding-right: var(--gutter) !important; }
   .statement p:first-child { font-size: 17px; }
-  .project-head { padding-top: 96px; }
+  .project-head { padding-top: 64px; }
   .project-head h1 { font-size: clamp(28px, 9vw, 44px); overflow-wrap: anywhere; }
   .gallery { columns: 1; }
   .pager { grid-template-columns: 1fr; }
@@ -257,3 +243,39 @@ a { color: inherit; }
 .legal p { margin: 0 0 1em; }
 .legal .stand { margin-top: 3em; font: 300 12px var(--wide); color: var(--ink-soft); }
 .footer small a { color: inherit; }
+
+/* ---------- works: one horizontal track, moved by vertical scrolling ---------- */
+:root { --card-w: clamp(220px, min(26vw, 38svh), 400px); }
+.works { position: relative; }
+.works .pin { position: sticky; top: 0; height: 100svh; overflow: hidden; overflow: clip; display: flex; align-items: center; }
+.track {
+  display: flex; align-items: flex-end; gap: clamp(20px, 3vw, 48px);
+  padding: 70px var(--gutter) 0; will-change: transform;
+}
+.panel { flex: none; width: clamp(240px, 30vw, 460px); padding-bottom: 48px; scroll-margin: 0; }
+.panel h2 { margin: 0 0 12px; font: 400 clamp(48px, 7vw, 120px)/1.15 var(--mono); color: var(--yellow); white-space: nowrap; }
+.panel p { margin: 0; font: 400 12px/1.6 var(--wide); font-stretch: 112.5%; color: var(--ink-soft); }
+.track .card + .panel { margin-left: clamp(40px, 8vw, 160px); }
+
+/* ---------- project overlay ---------- */
+html.locked { overflow: hidden; }
+.overlay {
+  position: fixed; inset: 0; z-index: 40; overflow-y: auto; overscroll-behavior: contain;
+  background: var(--bg); visibility: hidden; opacity: 0; transform: translateY(40px);
+  transition: opacity .6s var(--ease), transform .8s var(--ease), visibility 0s .8s;
+}
+.overlay.open { visibility: visible; opacity: 1; transform: none; transition: opacity .6s var(--ease), transform .8s var(--ease); }
+.overlay-close {
+  position: fixed; top: 14px; right: var(--gutter); z-index: 2; width: 48px; height: 48px;
+  border: 0; border-radius: 50%; background: var(--yellow); color: var(--ink); cursor: pointer;
+  font: 400 26px/1 var(--mono); transition: transform .6s var(--ease);
+}
+.overlay-close:hover { transform: rotate(90deg); }
+.overlay .project-body { padding-bottom: 20px; }
+.overlay .pager { max-width: 1200px; margin: 20px auto 0; }
+.lightbox { z-index: 60; }
+@media (max-width: 760px) {
+  :root { --card-w: 68vw; }
+  .panel { width: 72vw; }
+  .panel h2 { font-size: clamp(40px, 13vw, 64px); }
+}
