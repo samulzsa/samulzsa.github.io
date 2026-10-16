@@ -14,8 +14,11 @@ const root = flowers[0]?.dataset.root ?? "";
 const frameSrc = (i) => `${root}images/flower/${String(i).padStart(2, "0")}.webp`;
 for (let i = 1; i < FRAMES; i++) new Image().src = frameSrc(i); // preload
 let lastFrame = 0;
+// phones: the row is swiped sideways natively; larger screens: scrolling down slides it
+const sideways = matchMedia("(max-width: 760px)");
+const scrolled = () => (sideways.matches ? document.querySelector(".works .pin")?.scrollLeft ?? 0 : scrollY);
 const setFrame = () => {
-  const f = Math.floor(scrollY / STEP) % FRAMES;
+  const f = Math.floor(scrolled() / STEP) % FRAMES;
   if (f === lastFrame) return;
   lastFrame = f;
   flowers.forEach((img) => (img.src = frameSrc(f)));
@@ -39,31 +42,67 @@ const track = works?.querySelector(".track");
 let travel = 0;
 const layoutWorks = () => {
   if (!works) return;
+  if (sideways.matches) {
+    works.style.height = "";
+    track.style.transform = "";
+    return;
+  }
+  works.querySelector(".pin").scrollLeft = 0;
   travel = Math.max(0, track.scrollWidth - innerWidth);
   works.style.height = `${innerHeight + travel}px`;
   moveTrack();
 };
 const moveTrack = () => {
-  if (!works) return;
+  if (!works || sideways.matches) return;
   const x = Math.min(Math.max(-works.getBoundingClientRect().top, 0), travel);
   track.style.transform = `translate3d(${-x}px, 0, 0)`;
+  updateHover();
 };
-// vertical scroll position that shows a given panel (artist, degrees, …)
-const panelTop = (panel) => works.offsetTop + Math.min(panel.offsetLeft - 24, travel);
+
+// hover effect follows the mouse even when the row slides under a still cursor
+// (browsers only re-check :hover when the mouse itself moves)
+let mouse = null, hovered = null;
+const cards = [...document.querySelectorAll(".card")];
+const updateHover = () => {
+  // check card outlines directly (the hover inset would make edge hits flicker)
+  const open = document.documentElement.classList.contains("locked");
+  const card = (mouse && !open && cards.find((c) => {
+    const r = c.getBoundingClientRect();
+    return mouse.x >= r.left && mouse.x <= r.right && mouse.y >= r.top && mouse.y <= r.bottom;
+  })) || null;
+  if (card === hovered) return;
+  hovered?.classList.remove("is-hover");
+  card?.classList.add("is-hover");
+  hovered = card;
+};
+if (matchMedia("(hover: hover)").matches) {
+  addEventListener("mousemove", (e) => { mouse = { x: e.clientX, y: e.clientY }; updateHover(); }, { passive: true });
+  document.documentElement.addEventListener("mouseleave", () => { mouse = null; updateHover(); });
+  addEventListener("hashchange", () => setTimeout(updateHover)); // clear while an overlay is open
+}
+// vertical scroll position that shows a given group (artist, degrees, …)
+const groupTop = (group) => works.offsetTop + Math.min(group.offsetLeft - 32, travel);
 const goTo = (id, smooth = true) => {
   const el = document.getElementById(id);
   if (!el) return false;
-  const top = el.classList.contains("panel") ? panelTop(el) : el.getBoundingClientRect().top + scrollY;
-  scrollTo({ top, behavior: smooth ? "smooth" : "instant" });
+  const behavior = smooth ? "smooth" : "instant";
+  if (el.classList.contains("group") && sideways.matches) {
+    works.querySelector(".pin").scrollTo({ left: el.offsetLeft - 16, behavior });
+    return true;
+  }
+  const top = el.classList.contains("group") ? groupTop(el) : el.getBoundingClientRect().top + scrollY;
+  scrollTo({ top, behavior });
   return true;
 };
 if (works) {
   addEventListener("scroll", () => requestAnimationFrame(moveTrack), { passive: true });
   addEventListener("resize", layoutWorks);
   addEventListener("load", layoutWorks);
+  sideways.addEventListener("change", layoutWorks);
+  works.querySelector(".pin").addEventListener("scroll", () => requestAnimationFrame(setFrame), { passive: true });
   layoutWorks();
 }
-// in-page links (#artist, #about, …) — panels sit inside the sliding track, so compute their position
+// in-page links (#artist, #degrees, …) — groups sit inside the sliding row, so compute their position
 document.querySelectorAll('a[href^="#"]:not([href^="#/"])').forEach((a) =>
   a.addEventListener("click", (e) => {
     const id = a.getAttribute("href").slice(1);
@@ -77,7 +116,7 @@ document.querySelectorAll('a[href^="#"]:not([href^="#/"])').forEach((a) =>
 const initialHash = location.hash.slice(1);
 if (initialHash && !initialHash.startsWith("/")) {
   history.scrollRestoration = "manual";
-  addEventListener("load", () => setTimeout(() => { works.querySelector(".pin").scrollLeft = 0; goTo(initialHash, false); }, 60));
+  addEventListener("load", () => setTimeout(() => { if (!sideways.matches) works.querySelector(".pin").scrollLeft = 0; goTo(initialHash, false); }, 60));
 }
 
 // ---------- project overlay (#/project-name) ----------
@@ -85,9 +124,13 @@ const overlay = document.createElement("div");
 overlay.className = "overlay";
 overlay.setAttribute("role", "dialog");
 overlay.setAttribute("aria-modal", "true");
-overlay.innerHTML = `<button class="overlay-close" aria-label="Close">×</button><div class="overlay-body"></div>`;
+overlay.innerHTML = `<div class="overlay-body"></div>`;
 const overlayBody = overlay.querySelector(".overlay-body");
-if (document.querySelector("template[id^='p-']")) document.body.append(overlay);
+const closeBtn = document.createElement("button");
+closeBtn.className = "overlay-close";
+closeBtn.setAttribute("aria-label", "Close");
+closeBtn.textContent = "×";
+if (document.querySelector("template[id^='p-']")) document.body.append(overlay, closeBtn);
 let openedFromPage = false;
 
 const showProject = () => {
@@ -95,14 +138,16 @@ const showProject = () => {
   const tpl = slug && document.getElementById(`p-${slug}`);
   if (!tpl) {
     overlay.classList.remove("open");
+    closeBtn.classList.remove("open");
     document.documentElement.classList.remove("locked");
     return;
   }
   overlayBody.replaceChildren(tpl.content.cloneNode(true));
   overlay.scrollTop = 0;
   overlay.classList.add("open");
+  closeBtn.classList.add("open");
   document.documentElement.classList.add("locked");
-  overlay.querySelector(".overlay-close").focus({ preventScroll: true });
+  closeBtn.focus({ preventScroll: true });
 };
 const closeProject = () => {
   if (openedFromPage) history.back();
@@ -112,8 +157,16 @@ const closeProject = () => {
   }
   openedFromPage = false;
 };
-document.querySelectorAll('.card[href^="#/"]').forEach((a) => a.addEventListener("click", () => (openedFromPage = true)));
-overlay.querySelector(".overlay-close").addEventListener("click", closeProject);
+// remember when an overlay was opened from the page, so closing can simply go "back"
+document.addEventListener("click", (e) => {
+  if (e.target.closest('a[href^="#/"]') && !overlay.classList.contains("open")) openedFromPage = true;
+});
+addEventListener("hashchange", closeMenu);
+closeBtn.addEventListener("click", closeProject);
+// a click on empty space (not on text, images or links) closes the overlay
+overlay.addEventListener("click", (e) => {
+  if (!e.target.closest("p, h1, .meta span, img, a, button")) closeProject();
+});
 addEventListener("hashchange", showProject);
 showProject();
 
