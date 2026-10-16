@@ -65,7 +65,7 @@ a { color: inherit; }
 }
 .hero .flower { position: absolute; z-index: 1; width: clamp(150px, 22vw, 360px); right: 0; top: 100%; transform: translateY(-55%); }
 .hero .cue {
-  display: inline-block; margin-top: 32px; font: 400 12px var(--wide); font-stretch: 112.5%; color: var(--ink-soft);
+  display: inline-block; margin-top: 32px; font: 400 12px var(--wide); font-stretch: 112.5%; color: var(--yellow);
   animation: nudge 2.4s ease-in-out infinite;
 }
 @keyframes rise { to { opacity: 1; transform: none; } }
@@ -205,7 +205,7 @@ a { color: inherit; }
   :root { --foot-h: 96px; }
   .footer .copy { display: none; }
 }
-@media (hover: none) { .card .tag { opacity: 1; transform: none; } }
+@media (hover: none), (max-width: 760px) { .card .tag { display: none; } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
@@ -258,10 +258,9 @@ html.locked { overflow: hidden; }
   :root { --card-w: 68vw; }
   .group-head { flex-direction: column; gap: 4px; }
   /* phones: swipe the row sideways, the page itself doesn't scroll */
-  .works .pin { position: relative; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .works .pin { position: relative; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .works .pin::-webkit-scrollbar { display: none; }
   .track { will-change: auto; }
-  .card, .group-head, .hero { scroll-snap-align: start; scroll-margin-left: var(--gutter); }
   .overlay-close.open { opacity: .85; backdrop-filter: blur(6px); }
   .works .pin { --head-h: calc(clamp(40px, 12vw, 64px) * 1.1 + 30px); }
   .group-head h2 { font-size: clamp(40px, 12vw, 64px); }
